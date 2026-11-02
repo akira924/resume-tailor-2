@@ -42,6 +42,7 @@ describe('auth', () => {
     assert.ok(signUp.body.accessToken);
     assert.equal(signUp.body.user.email, 'jane@example.com');
     assert.equal(signUp.body.user.passwordHash, undefined);
+    assert.equal(signUp.body.user.isActive, 0);
 
     const signIn = await request(app)
       .post('/api/auth/sign-in')

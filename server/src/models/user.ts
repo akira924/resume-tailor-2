@@ -6,8 +6,8 @@ const userSchema = new Schema(
     passwordHash: { type: String, required: true, select: false },
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
-    photoURL: { type: String, default: null },
     role: { type: String, enum: ['admin', 'user'], default: 'user' },
+    isActive: { type: Number, required: true, enum: [0, 1], default: 0 },
   },
   { timestamps: true }
 );
@@ -25,7 +25,7 @@ export function toPublicUser(user: UserDocument) {
     firstName: user.firstName,
     lastName: user.lastName,
     displayName: `${user.firstName} ${user.lastName}`,
-    photoURL: user.photoURL,
     role: user.role,
+    isActive: user.isActive,
   };
 }
