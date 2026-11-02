@@ -2,6 +2,20 @@ import type { IDateValue, ISocialLink } from './common';
 
 // ----------------------------------------------------------------------
 
+export type IUserStatus = 'active' | 'pending';
+
+/** A user from the `users` collection, as returned by GET /api/users. */
+export type IUserListItem = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  role: 'admin' | 'user';
+  isActive: 0 | 1;
+  createdAt: string;
+};
+
 export type IUserTableFilters = {
   name: string;
   role: string[];

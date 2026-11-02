@@ -120,7 +120,7 @@ export const dashboardRoutes: RouteObject[] = [
       {
         path: 'user',
         children: [
-          { index: true, element: <UserProfilePage /> },
+          { index: true, element: <UserListPage /> },
           { path: 'profile', element: <UserProfilePage /> },
           { path: 'cards', element: <UserCardsPage /> },
           { path: 'list', element: <UserListPage /> },
