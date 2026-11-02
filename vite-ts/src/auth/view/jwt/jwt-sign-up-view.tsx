@@ -19,7 +19,6 @@ import { Iconify } from 'src/components/iconify';
 import { Form, Field, schemaUtils } from 'src/components/hook-form';
 
 import { signUp } from '../../context/jwt';
-import { useAuthContext } from '../../hooks';
 import { getErrorMessage } from '../../utils';
 import { FormHead } from '../../components/form-head';
 import { SignUpTerms } from '../../components/sign-up-terms';
@@ -44,8 +43,6 @@ export function JwtSignUpView() {
   const router = useRouter();
 
   const showPassword = useBoolean();
-
-  const { checkUserSession } = useAuthContext();
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -74,9 +71,8 @@ export function JwtSignUpView() {
         firstName: data.firstName,
         lastName: data.lastName,
       });
-      await checkUserSession?.();
 
-      router.refresh();
+      router.push(`${paths.auth.jwt.signIn}?registered=true`);
     } catch (error) {
       console.error(error);
       const feedbackMessage = getErrorMessage(error);

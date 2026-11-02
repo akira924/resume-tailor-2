@@ -12,8 +12,8 @@ import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 
 import { paths } from 'src/routes/paths';
-import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
+import { useRouter, useSearchParams } from 'src/routes/hooks';
 
 import { Iconify } from 'src/components/iconify';
 import { Form, Field, schemaUtils } from 'src/components/hook-form';
@@ -39,6 +39,9 @@ export const SignInSchema = z.object({
 
 export function JwtSignInView() {
   const router = useRouter();
+
+  const searchParams = useSearchParams();
+  const justRegistered = searchParams.get('registered') === 'true';
 
   const showPassword = useBoolean();
 
@@ -139,6 +142,12 @@ export function JwtSignInView() {
         }
         sx={{ textAlign: { xs: 'center', md: 'left' } }}
       />
+
+      {justRegistered && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          Account created successfully. Please sign in.
+        </Alert>
+      )}
 
       <Alert severity="info" sx={{ mb: 3 }}>
         Use <strong>{defaultValues.email}</strong>

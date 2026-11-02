@@ -39,7 +39,7 @@ const newUser = {
 describe('auth', () => {
   it('signs up, signs in and fetches the current user', async () => {
     const signUp = await request(app).post('/api/auth/sign-up').send(newUser).expect(201);
-    assert.ok(signUp.body.accessToken);
+    assert.equal(signUp.body.accessToken, undefined);
     assert.equal(signUp.body.user.email, 'jane@example.com');
     assert.equal(signUp.body.user.passwordHash, undefined);
     assert.equal(signUp.body.user.isActive, 0);

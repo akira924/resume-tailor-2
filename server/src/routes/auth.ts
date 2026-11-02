@@ -66,7 +66,8 @@ authRouter.post('/sign-up', authLimiter, async (req, res) => {
       passwordHash: await hashPassword(password),
     });
 
-    res.status(201).json({ accessToken: signAccessToken(user.id), user: toPublicUser(user) });
+    // No token here: the user must sign in after registering.
+    res.status(201).json({ user: toPublicUser(user) });
   } catch (error) {
     // Unique index race: two sign-ups with the same email at once.
     if ((error as { code?: number }).code === 11000) {
