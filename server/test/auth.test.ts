@@ -36,6 +36,10 @@ const newUser = {
   lastName: 'Doe',
 };
 
+function approve(email: string) {
+  return mongoose.connection.collection('users').updateOne({ email }, { $set: { isActive: 1 } });
+}
+
 describe('auth', () => {
   it('signs up, signs in and fetches the current user', async () => {
     const signUp = await request(app).post('/api/auth/sign-up').send(newUser).expect(201);
@@ -43,6 +47,8 @@ describe('auth', () => {
     assert.equal(signUp.body.user.email, 'jane@example.com');
     assert.equal(signUp.body.user.passwordHash, undefined);
     assert.equal(signUp.body.user.isActive, 0);
+
+    await approve('jane@example.com');
 
     const signIn = await request(app)
       .post('/api/auth/sign-in')
@@ -85,6 +91,34 @@ describe('auth', () => {
       .expect(401);
 
     assert.equal(wrong.body.message, unknown.body.message);
+  });
+
+  it('rejects sign-in for unapproved users only when the password is correct', async () => {
+    await request(app).post('/api/auth/sign-up').send(newUser).expect(201);
+
+    const res = await request(app)
+      .post('/api/auth/sign-in')
+      .send({ email: newUser.email, password: newUser.password })
+      .expect(403);
+    assert.match(res.body.message, /not been approved/);
+    assert.equal(res.body.accessToken, undefined);
+
+    await request(app)
+      .post('/api/auth/sign-in')
+      .send({ email: newUser.email, password: 'nope-nope' })
+      .expect(401);
+  });
+
+  it('lets inactive admins sign in', async () => {
+    await request(app).post('/api/auth/sign-up').send(newUser).expect(201);
+    await mongoose.connection
+      .collection('users')
+      .updateOne({ email: 'jane@example.com' }, { $set: { role: 'admin' } });
+
+    await request(app)
+      .post('/api/auth/sign-in')
+      .send({ email: newUser.email, password: newUser.password })
+      .expect(200);
   });
 
   it('rejects /me without a valid token', async () => {

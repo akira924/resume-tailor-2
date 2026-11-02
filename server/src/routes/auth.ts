@@ -48,6 +48,11 @@ authRouter.post('/sign-in', authLimiter, async (req, res) => {
     throw new HttpError(401, 'Invalid email or password');
   }
 
+  // Checked only after the password matches, so this doesn't reveal which emails exist.
+  if (user.role === 'user' && user.isActive === 0) {
+    throw new HttpError(403, 'Your account has not been approved yet');
+  }
+
   res.json({ accessToken: signAccessToken(user.id), user: toPublicUser(user) });
 });
 
