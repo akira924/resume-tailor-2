@@ -3,11 +3,14 @@ import type { AuthState } from '../../types';
 import { useSetState } from 'minimal-shared/hooks';
 import { useMemo, useEffect, useCallback } from 'react';
 
-import axios, { endpoints } from 'src/lib/axios';
+import { paths } from 'src/routes/paths';
 
-import { JWT_STORAGE_KEY } from './constant';
+import axios, { endpoints } from 'src/lib/axios';
+import { subscribeToEvents } from 'src/lib/event-stream';
+
 import { AuthContext } from '../auth-context';
 import { setSession, isValidToken } from './utils';
+import { JWT_STORAGE_KEY, SESSION_ENDED_STORAGE_KEY } from './constant';
 
 // ----------------------------------------------------------------------
 
@@ -49,6 +52,39 @@ export function AuthProvider({ children }: Props) {
     checkUserSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const isRegularUser = state.user?.role === 'user';
+
+  // Signs a regular user out as soon as an admin deactivates them. Admins can't be blocked.
+  useEffect(() => {
+    if (!isRegularUser) return undefined;
+
+    const controller = new AbortController();
+
+    const endSession = (message = 'Your session has ended. Please sign in again.') => {
+      controller.abort();
+      sessionStorage.setItem(SESSION_ENDED_STORAGE_KEY, message);
+      setSession(null);
+      // Full reload, so no state from the old session survives.
+      window.location.href = paths.auth.jwt.signIn;
+    };
+
+    subscribeToEvents(endpoints.auth.events, {
+      signal: controller.signal,
+      onEvent: (event, data) => {
+        if (event !== 'session-ended') return;
+
+        try {
+          endSession((JSON.parse(data) as { message?: string }).message);
+        } catch {
+          endSession();
+        }
+      },
+      onRejected: (status, message) => endSession(message),
+    });
+
+    return () => controller.abort();
+  }, [isRegularUser]);
 
   // ----------------------------------------------------------------------
 

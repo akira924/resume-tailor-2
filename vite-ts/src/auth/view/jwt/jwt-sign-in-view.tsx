@@ -1,6 +1,6 @@
 import * as z from 'zod';
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useState, useEffect } from 'react';
 import { useBoolean } from 'minimal-shared/hooks';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -21,7 +21,7 @@ import { Form, Field, schemaUtils } from 'src/components/hook-form';
 import { useAuthContext } from '../../hooks';
 import { getErrorMessage } from '../../utils';
 import { FormHead } from '../../components/form-head';
-import { signInWithPassword } from '../../context/jwt';
+import { signInWithPassword, SESSION_ENDED_STORAGE_KEY } from '../../context/jwt';
 
 // ----------------------------------------------------------------------
 
@@ -48,6 +48,13 @@ export function JwtSignInView() {
   const { checkUserSession } = useAuthContext();
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Set when the server ended the previous session (e.g. the account was deactivated).
+  const [sessionEndedMessage] = useState(() => sessionStorage.getItem(SESSION_ENDED_STORAGE_KEY));
+
+  useEffect(() => {
+    sessionStorage.removeItem(SESSION_ENDED_STORAGE_KEY);
+  }, []);
 
   const defaultValues: SignInSchemaType = {
     email: 'demo@minimals.cc',
@@ -154,6 +161,12 @@ export function JwtSignInView() {
         {' with password '}
         <strong>{defaultValues.password}</strong>
       </Alert>
+
+      {!!sessionEndedMessage && !errorMessage && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          {sessionEndedMessage}
+        </Alert>
+      )}
 
       {!!errorMessage && (
         <Alert severity="error" sx={{ mb: 3 }}>

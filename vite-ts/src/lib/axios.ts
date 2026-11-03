@@ -60,11 +60,16 @@ export const endpoints = {
   chat: '/api/chat',
   kanban: '/api/kanban',
   calendar: '/api/calendar',
-  users: '/api/users',
+  users: {
+    list: '/api/users',
+    events: '/api/users/events',
+    status: (id: string) => `/api/users/${id}/status`,
+  },
   auth: {
     me: '/api/auth/me',
     signIn: '/api/auth/sign-in',
     signUp: '/api/auth/sign-up',
+    events: '/api/auth/events',
   },
   mail: {
     list: '/api/mail/list',

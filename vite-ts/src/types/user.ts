@@ -2,7 +2,7 @@ import type { IDateValue, ISocialLink } from './common';
 
 // ----------------------------------------------------------------------
 
-export type IUserStatus = 'active' | 'pending';
+export type IUserStatus = 'active' | 'pending' | 'rejected' | 'deactivated';
 
 /** A user from the `users` collection, as returned by GET /api/users. */
 export type IUserListItem = {
@@ -12,7 +12,8 @@ export type IUserListItem = {
   lastName: string;
   displayName: string;
   role: 'admin' | 'user';
-  isActive: 0 | 1;
+  /** -1 rejected, 0 pending, 1 active, 2 deactivated */
+  isActive: -1 | 0 | 1 | 2;
   createdAt: string;
 };
 

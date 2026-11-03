@@ -43,7 +43,16 @@ const STATUS_OPTIONS = [
   { value: 'all', label: 'All' },
   { value: 'active', label: 'Active' },
   { value: 'pending', label: 'Pending' },
+  { value: 'deactivated', label: 'Deactivated' },
+  { value: 'rejected', label: 'Rejected' },
 ];
+
+const STATUS_BY_IS_ACTIVE: Record<IUserListItem['isActive'], IUserStatus> = {
+  [-1]: 'rejected',
+  0: 'pending',
+  1: 'active',
+  2: 'deactivated',
+};
 
 const ROLE_OPTIONS = ['admin', 'user'];
 
@@ -52,6 +61,7 @@ const TABLE_HEAD: TableHeadCellProps[] = [
   { id: 'role', label: 'Role', width: 160 },
   { id: 'status', label: 'Status', width: 120 },
   { id: 'createdAt', label: 'Joined', width: 160 },
+  { id: '', width: 88 },
 ];
 
 // ----------------------------------------------------------------------
@@ -66,7 +76,12 @@ export function UserListView() {
   const { users, usersLoading, usersError } = useGetUsers();
 
   const tableData = useMemo<UserRow[]>(
-    () => users.map((user) => ({ ...user, status: user.isActive ? 'active' : 'pending' })),
+    // Same rule as sign-in and the nav badge: admins never wait for approval.
+    () =>
+      users.map((user) => ({
+        ...user,
+        status: user.role === 'admin' ? 'active' : STATUS_BY_IS_ACTIVE[user.isActive],
+      })),
     [users]
   );
 
@@ -132,6 +147,7 @@ export function UserListView() {
                   color={
                     (tab.value === 'active' && 'success') ||
                     (tab.value === 'pending' && 'warning') ||
+                    (tab.value === 'rejected' && 'error') ||
                     'default'
                   }
                 >

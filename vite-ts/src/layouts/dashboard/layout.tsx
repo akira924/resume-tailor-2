@@ -2,6 +2,7 @@ import type { Breakpoint } from '@mui/material/styles';
 import type { NavItemProps, NavSectionProps } from 'src/components/nav-section';
 import type { MainSectionProps, HeaderSectionProps, LayoutSectionProps } from '../core';
 
+import { useMemo } from 'react';
 import { merge } from 'es-toolkit';
 import { useBoolean } from 'minimal-shared/hooks';
 
@@ -10,10 +11,14 @@ import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
 import { iconButtonClasses } from '@mui/material/IconButton';
 
+import { paths } from 'src/routes/paths';
+
 import { allLangs } from 'src/locales';
 import { _contacts, _notifications } from 'src/_mock';
+import { usePendingUsersCount } from 'src/actions/user';
 
 import { Logo } from 'src/components/logo';
+import { Label } from 'src/components/label';
 import { useSettingsContext } from 'src/components/settings';
 
 import { useMockedUser } from 'src/auth/hooks';
@@ -68,7 +73,17 @@ export function DashboardLayout({
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
 
-  const navData = slotProps?.nav?.data ?? dashboardNavData;
+  const pendingUsersCount = usePendingUsersCount();
+
+  const navData = useMemo(
+    () =>
+      withNavBadge(
+        slotProps?.nav?.data ?? dashboardNavData,
+        paths.dashboard.user.root,
+        pendingUsersCount
+      ),
+    [slotProps?.nav?.data, pendingUsersCount]
+  );
 
   const isNavMini = settings.state.navLayout === 'mini';
   const isNavHorizontal = settings.state.navLayout === 'horizontal';
@@ -234,4 +249,31 @@ export function DashboardLayout({
       {renderMain()}
     </LayoutSection>
   );
+}
+
+// ----------------------------------------------------------------------
+
+/** Shows `count` as a badge on the top-level nav item at `path` (hidden when zero). */
+function withNavBadge(
+  data: NavSectionProps['data'],
+  path: string,
+  count: number
+): NavSectionProps['data'] {
+  if (!count) return data;
+
+  return data.map((section) => ({
+    ...section,
+    items: section.items.map((item) =>
+      item.path === path
+        ? {
+            ...item,
+            info: (
+              <Label color="error" variant="inverted">
+                {count}
+              </Label>
+            ),
+          }
+        : item
+    ),
+  }));
 }
