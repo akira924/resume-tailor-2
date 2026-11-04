@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import { config } from './config.js';
 import { authRouter } from './routes/auth.js';
 import { usersRouter } from './routes/users.js';
+import { profileRouter } from './routes/profile.js';
 import { HttpError } from './lib/http-error.js';
 import { errorHandler } from './middleware/error-handler.js';
 
@@ -22,6 +23,7 @@ export function createApp() {
 
   app.use('/api/auth', authRouter);
   app.use('/api/users', usersRouter);
+  app.use('/api/profile', profileRouter);
 
   app.use(() => {
     throw new HttpError(404, 'Not found');

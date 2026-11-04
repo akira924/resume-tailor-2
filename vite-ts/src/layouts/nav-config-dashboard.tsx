@@ -33,6 +33,7 @@ const ICONS = {
   banking: icon('ic-banking'),
   booking: icon('ic-booking'),
   invoice: icon('ic-invoice'),
+  resume: icon('ic-resume'),
   product: icon('ic-product'),
   calendar: icon('ic-calendar'),
   disabled: icon('ic-disabled'),
@@ -62,6 +63,16 @@ const ICONS = {
  * - `deepMatch`: An optional boolean to indicate if the item should match subpaths.
  */
 export const navData: NavSectionProps['data'] = [
+  /**
+   * Profile
+   */
+  {
+    subheader: 'Profile',
+    items: [
+      { title: 'Profile', path: paths.dashboard.profile, icon: ICONS.user },
+      { title: 'Resume', path: paths.dashboard.resume, icon: ICONS.resume },
+    ],
+  },
   /**
    * Overview
    */

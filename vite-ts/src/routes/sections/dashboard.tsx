@@ -81,6 +81,9 @@ const PermissionDeniedPage = lazy(() => import('src/pages/dashboard/permission')
 const ParamsPage = lazy(() => import('src/pages/dashboard/params'));
 const SubpathsPage = lazy(() => import('src/pages/dashboard/subpaths'));
 const BlankPage = lazy(() => import('src/pages/dashboard/blank'));
+// Profile & resume
+const ProfilePage = lazy(() => import('src/pages/dashboard/profile'));
+const ResumePage = lazy(() => import('src/pages/dashboard/resume'));
 
 // ----------------------------------------------------------------------
 
@@ -205,6 +208,8 @@ export const dashboardRoutes: RouteObject[] = [
       { path: 'permission', element: <PermissionDeniedPage /> },
       { path: 'params', element: <ParamsPage /> },
       { path: 'blank', element: <BlankPage /> },
+      { path: 'profile', element: <ProfilePage /> },
+      { path: 'resume', element: <ResumePage /> },
       {
         path: 'subpaths',
         children: [
