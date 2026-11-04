@@ -2,11 +2,13 @@ import type { ProfileSchemaType } from './profile-schema';
 
 import { useFieldArray, useFormContext } from 'react-hook-form';
 
+import MenuItem from '@mui/material/MenuItem';
+
 import { Field } from 'src/components/hook-form';
 
 import { newExperience } from './profile-schema';
-import { MONTH_PICKER_PROPS } from './profile-constants';
 import { ProfileListCard, ProfileListItem } from './profile-list-card';
+import { CAREER_LEVELS, MONTH_PICKER_PROPS } from './profile-constants';
 
 // ----------------------------------------------------------------------
 
@@ -23,6 +25,27 @@ export function ProfileExperience() {
       emptyText="No work experience yet."
       count={fields.length}
       onAdd={() => append(newExperience)}
+      header={
+        <>
+          <Field.Select name="career.level" label="Level">
+            <MenuItem value="">
+              <em>Not set</em>
+            </MenuItem>
+            {CAREER_LEVELS.map((level) => (
+              <MenuItem key={level} value={level}>
+                {level}
+              </MenuItem>
+            ))}
+          </Field.Select>
+          <Field.NumberInput
+            name="career.yearsOfExperience"
+            min={1}
+            max={20}
+            captionText="Years of experience"
+            helperText="Total years of professional experience"
+          />
+        </>
+      }
     >
       {fields.map((field, index) => (
         <ProfileListItem key={field.id} label={`Job ${index + 1}`} onRemove={() => remove(index)}>

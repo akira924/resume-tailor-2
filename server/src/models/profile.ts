@@ -3,6 +3,17 @@ import { Schema, model, type HydratedDocument, type InferSchemaType } from 'mong
 // Dates are stored as the ISO strings the frontend date pickers produce.
 // `endDate: null` means the job or study is ongoing ("Present").
 
+export const CAREER_LEVELS = [
+  'Junior',
+  'Mid',
+  'Mid-Senior',
+  'Senior',
+  'Senior/Staff',
+  'Staff',
+  'Lead',
+  'Principal',
+] as const;
+
 const experienceSchema = new Schema(
   {
     company: { type: String, required: true, trim: true },
@@ -48,6 +59,11 @@ const profileSchema = new Schema(
       github: { type: String, default: '', trim: true },
       website: { type: String, default: '', trim: true },
     },
+    // Overall seniority, shown above the job list. `level: ''` means not set.
+    career: {
+      level: { type: String, enum: ['', ...CAREER_LEVELS], default: '' },
+      yearsOfExperience: { type: Number, min: 1, max: 20, default: 1 },
+    },
     experience: { type: [experienceSchema], default: [] },
     education: { type: [educationSchema], default: [] },
     certifications: { type: [certificationSchema], default: [] },
@@ -65,11 +81,12 @@ export const ProfileModel = model('Profile', profileSchema);
  * it is always the account email, so it can't drift from the address the user signs in with.
  */
 export function toPublicProfile(profile: ProfileDocument, email: string) {
-  const { personal, links, experience, education, certifications } = profile.toObject();
+  const { personal, links, career, experience, education, certifications } = profile.toObject();
 
   return {
     personal: { ...personal, email },
     links,
+    career,
     experience,
     education,
     certifications,

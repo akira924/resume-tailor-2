@@ -18,6 +18,8 @@ type ProfileListCardProps = {
   emptyText: string;
   count: number;
   onAdd: () => void;
+  /** Section-wide fields, shown above the list. */
+  header?: React.ReactNode;
   children: React.ReactNode;
 };
 
@@ -29,6 +31,7 @@ export function ProfileListCard({
   emptyText,
   count,
   onAdd,
+  header,
   children,
 }: ProfileListCardProps) {
   return (
@@ -49,6 +52,19 @@ export function ProfileListCard({
       />
 
       <Stack spacing={2} sx={{ p: 3 }}>
+        {header && (
+          <Box
+            sx={{
+              pb: 1,
+              gap: 2.5,
+              display: 'grid',
+              gridTemplateColumns: { xs: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)' },
+            }}
+          >
+            {header}
+          </Box>
+        )}
+
         {count ? (
           children
         ) : (

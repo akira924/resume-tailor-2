@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { HttpError } from '../lib/http-error.js';
 import { requireAuth } from '../middleware/require-auth.js';
 import { UserModel } from '../models/user.js';
-import { ProfileModel, toPublicProfile } from '../models/profile.js';
+import { CAREER_LEVELS, ProfileModel, toPublicProfile } from '../models/profile.js';
 
 const text = (max: number) => z.string().trim().max(max).default('');
 
@@ -67,6 +67,10 @@ const updateProfileSchema = z.object({
     github: link('GitHub'),
     website: link('Website'),
   }),
+  career: z.object({
+    level: z.union([z.literal(''), z.enum(CAREER_LEVELS, { error: 'Invalid level' })]).default(''),
+    yearsOfExperience: z.int().min(1).max(20),
+  }),
   experience: z.array(experienceSchema).max(30),
   education: z.array(educationSchema).max(20),
   certifications: z.array(certificationSchema).max(50),
@@ -107,6 +111,7 @@ profileRouter.get('/', async (req, res) => {
         location: '',
       },
       links: { linkedin: '', github: '', website: '' },
+      career: { level: '', yearsOfExperience: 1 },
       experience: [],
       education: [],
       certifications: [],

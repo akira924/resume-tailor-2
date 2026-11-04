@@ -53,6 +53,7 @@ const validProfile = {
     location: 'London, UK',
   },
   links: { linkedin: 'linkedin.com/in/ada', github: 'https://github.com/ada', website: '' },
+  career: { level: 'Senior', yearsOfExperience: 7 },
   experience: [
     {
       company: 'Analytical Engines Ltd',
@@ -93,6 +94,7 @@ describe('GET /api/profile', () => {
     assert.equal(res.body.profile.personal.fullName, 'Ada Lovelace');
     assert.equal(res.body.profile.personal.email, 'ada@example.com');
     assert.deepEqual(res.body.profile.experience, []);
+    assert.deepEqual(res.body.profile.career, { level: '', yearsOfExperience: 1 });
     assert.equal(res.body.profile.updatedAt, null);
   });
 });
@@ -115,6 +117,7 @@ describe('PUT /api/profile', () => {
     const { profile } = res.body;
     assert.equal(profile.personal.location, 'London, UK');
     assert.equal(profile.links.linkedin, 'https://linkedin.com/in/ada');
+    assert.deepEqual(profile.career, { level: 'Senior', yearsOfExperience: 7 });
     assert.equal(profile.experience[0].bulletCount, 4);
     assert.equal(profile.experience[0].endDate, null);
     assert.equal(profile.education[0].major, 'Mathematics');
@@ -204,5 +207,21 @@ describe('PUT /api/profile', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({ ...validProfile, experience: [{ ...validProfile.experience[0], bulletCount: 0 }] })
       .expect(400);
+  });
+
+  it('rejects an unknown level and years of experience outside 1-20', async () => {
+    const token = await createActiveUser('ada@example.com');
+
+    for (const career of [
+      { level: 'Intern', yearsOfExperience: 5 },
+      { level: 'Senior', yearsOfExperience: 0 },
+      { level: 'Senior', yearsOfExperience: 21 },
+    ]) {
+      await request(app)
+        .put('/api/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ ...validProfile, career })
+        .expect(400);
+    }
   });
 });

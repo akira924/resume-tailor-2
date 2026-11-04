@@ -39,6 +39,11 @@ export type IProfile = {
     github: string;
     website: string;
   };
+  career: {
+    /** One of CAREER_LEVELS, or '' when not set. */
+    level: string;
+    yearsOfExperience: number;
+  };
   experience: IProfileExperience[];
   education: IProfileEducation[];
   certifications: IProfileCertification[];
