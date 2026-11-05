@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   skillList: { flex: 1 },
   // experience
   job: { marginBottom: 8 },
-  roleDescription: { color: COLORS.secondary, marginTop: 2, marginBottom: 3 },
+  roleDescription: { color: COLORS.secondary, marginTop: 2 },
   bullet: { flexDirection: 'row', marginBottom: 1.5 },
   bulletDot: { width: 10 },
   bulletText: { flex: 1 },
@@ -144,14 +144,26 @@ export function ResumePdfDocument({ resume }: Props) {
               {!!job.role_description && (
                 <Text style={styles.roleDescription}>{job.role_description}</Text>
               )}
+              {!!job.sentences.length && <Text style={styles.bold}>Key Contributions</Text>}
             </View>
 
             {job.sentences.map((sentence, i) => (
-              <View key={i} style={styles.bullet} wrap={false}>
+              <View
+                key={i}
+                style={[styles.bullet, i === job.sentences.length - 1 ? { marginBottom: 0 } : {}]}
+                wrap={false}
+              >
                 <Text style={styles.bulletDot}>•</Text>
                 <Text style={styles.bulletText}>{sentence}</Text>
               </View>
             ))}
+
+            {!!job.used_skills?.length && (
+              <Text>
+                <Text style={styles.bold}>Technologies: </Text>
+                {job.used_skills.join(', ')}
+              </Text>
+            )}
           </View>
         ))}
       </Section>
