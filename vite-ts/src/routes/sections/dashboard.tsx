@@ -84,6 +84,7 @@ const BlankPage = lazy(() => import('src/pages/dashboard/blank'));
 // Profile & resume
 const ProfilePage = lazy(() => import('src/pages/dashboard/profile'));
 const ResumePage = lazy(() => import('src/pages/dashboard/resume'));
+const AiPromptPage = lazy(() => import('src/pages/dashboard/ai-prompt'));
 
 // ----------------------------------------------------------------------
 
@@ -210,6 +211,7 @@ export const dashboardRoutes: RouteObject[] = [
       { path: 'blank', element: <BlankPage /> },
       { path: 'profile', element: <ProfilePage /> },
       { path: 'resume', element: <ResumePage /> },
+      { path: 'ai-prompt', element: <AiPromptPage /> },
       {
         path: 'subpaths',
         children: [

@@ -41,6 +41,7 @@ const ICONS = {
   subpaths: icon('ic-subpaths'),
   menuItem: icon('ic-menu-item'),
   ecommerce: icon('ic-ecommerce'),
+  aiPrompt: icon('ic-ai-prompt'),
   analytics: icon('ic-analytics'),
   dashboard: icon('ic-dashboard'),
 };
@@ -70,6 +71,7 @@ export const navData: NavSectionProps['data'] = [
     subheader: 'Profile',
     items: [
       { title: 'Profile', path: paths.dashboard.profile, icon: ICONS.user },
+      { title: 'AI Prompt', path: paths.dashboard.aiPrompt, icon: ICONS.aiPrompt },
       { title: 'Resume', path: paths.dashboard.resume, icon: ICONS.resume },
     ],
   },
