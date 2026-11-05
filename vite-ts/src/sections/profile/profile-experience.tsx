@@ -50,7 +50,13 @@ export function ProfileExperience() {
       {fields.map((field, index) => (
         <ProfileListItem key={field.id} label={`Job ${index + 1}`} onRemove={() => remove(index)}>
           <Field.Text name={`experience.${index}.company`} label="Company" />
-          <Field.Text name={`experience.${index}.title`} label="Job title" />
+          <Field.Text
+            name={`experience.${index}.title`}
+            label="Job title"
+            placeholder="Will be tailored"
+            slotProps={{ input: { readOnly: true }, inputLabel: { shrink: true } }}
+            sx={{ '& input::placeholder': { fontStyle: 'italic' } }}
+          />
           <Field.Text name={`experience.${index}.location`} label="Location" />
           <Field.NumberInput
             name={`experience.${index}.bulletCount`}

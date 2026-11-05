@@ -132,5 +132,7 @@ export function toFormValues({ updatedAt, career, ...profile }: IProfile): Profi
   return {
     ...profile,
     career: { ...defaultValues.career, ...career } as ProfileSchemaType['career'],
+    // Job titles are chosen per resume by the AI, so the profile keeps them blank.
+    experience: profile.experience.map((job) => ({ ...job, title: '' })),
   };
 }
