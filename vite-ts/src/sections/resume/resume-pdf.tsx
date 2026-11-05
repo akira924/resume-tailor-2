@@ -52,16 +52,40 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   bold: { fontWeight: 700 },
   muted: { color: COLORS.secondary },
-  skillRow: { flexDirection: 'row', marginBottom: 2 },
-  skillCategory: { width: 150, fontWeight: 700 },
+  // Spacing between items uses rowGap on the parent, not marginBottom on the item: react-pdf
+  // moves a whole View to the next page when it fits but its marginBottom does not.
+  // Skill columns are Views so that when a row splits across pages, the continuation
+  // keeps its left column's width and the wrapped text stays aligned.
+  skills: { rowGap: 2 },
+  skillRow: { flexDirection: 'row' },
+  skillCategory: { width: 150 },
   skillList: { flex: 1 },
   // experience
-  job: { marginBottom: 8 },
+  // Jobs must stay direct children of the section, with no wrapper View: if a wrapper's first
+  // job can't start on the page, react-pdf puts the whole job on that page and cuts off its text.
+  nextJob: { marginTop: 8 },
   roleDescription: { color: COLORS.secondary, marginTop: 2 },
-  bullet: { flexDirection: 'row', marginBottom: 1.5 },
+  bullets: { rowGap: 1.5 },
+  bullet: { flexDirection: 'row' },
   bulletDot: { width: 10 },
   bulletText: { flex: 1 },
+  // education
+  educations: { rowGap: 4 },
 });
+
+// Page-break rules: each of these stays together on one page (wrap={false}).
+//  - Section title and its border line
+//  - Company entry: job title, period, company, location
+//  - Role description
+//  - Each bullet, with the "Key Contributions" label on the first bullet
+//    and "Technologies" on the last bullet
+//  - Education entry
+//  - Certification entry
+// Anything else (summary, skills) may break between any two lines.
+
+// By default react-pdf keeps at least 2 lines together, which pushes short groups of
+// lines to the next page. This lets a break fall between any two lines of a text.
+const BREAK_ANY_LINE = { orphans: 1, widows: 1 };
 
 // ----------------------------------------------------------------------
 
@@ -86,7 +110,9 @@ export function ResumePDFViewer({ resume }: Props) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={styles.sectionTitle} wrap={false}>
+        {title}
+      </Text>
       {children}
     </View>
   );
@@ -115,77 +141,94 @@ export function ResumePdfDocument({ resume }: Props) {
   const renderSummary = () =>
     !!resume.summary && (
       <Section title="Summary">
-        <Text>{resume.summary}</Text>
+        <Text {...BREAK_ANY_LINE}>{resume.summary}</Text>
       </Section>
     );
 
   const renderSkills = () =>
     !!resume.skillsets.length && (
       <Section title="Skills">
-        {resume.skillsets.map((set, index) => (
-          <View key={index} style={styles.skillRow} wrap={false}>
-            <Text style={styles.skillCategory}>{set.category}</Text>
-            <Text style={styles.skillList}>{set.skills.join(', ')}</Text>
-          </View>
-        ))}
+        <View style={styles.skills}>
+          {resume.skillsets.map((set, index) => (
+            <View key={index} style={styles.skillRow}>
+              <View style={styles.skillCategory}>
+                <Text style={styles.bold} {...BREAK_ANY_LINE}>
+                  {set.category}
+                </Text>
+              </View>
+              <View style={styles.skillList}>
+                <Text {...BREAK_ANY_LINE}>{set.skills.join(', ')}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
       </Section>
     );
 
   const renderExperience = () =>
     !!resume.experience.length && (
       <Section title="Experience">
-        {resume.experience.map((job, index) => (
-          <View key={index} style={styles.job}>
-            {/* Keep the job heading with its first lines instead of orphaning it at a page bottom */}
-            <View wrap={false}>
-              <View style={styles.row}>
-                <Text style={styles.bold}>{job.title}</Text>
-                <Text style={styles.muted}>{job.period}</Text>
+        {resume.experience.map((job, index) => {
+          const technologies = !!job.used_skills?.length && (
+            <Text wrap={false}>
+              <Text style={styles.bold}>Technologies: </Text>
+              {job.used_skills.join(', ')}
+            </Text>
+          );
+
+          return (
+            <View key={index} style={index > 0 ? styles.nextJob : undefined}>
+              <View wrap={false}>
+                <View style={styles.row}>
+                  <Text style={styles.bold}>{job.title}</Text>
+                  <Text style={styles.muted}>{job.period}</Text>
+                </View>
+                <View style={styles.row}>
+                  <Text>{job.company}</Text>
+                  <Text style={styles.muted}>{job.location}</Text>
+                </View>
               </View>
-              <View style={styles.row}>
-                <Text>{job.company}</Text>
-                <Text style={styles.muted}>{job.location}</Text>
-              </View>
+
               {!!job.role_description && (
-                <Text style={styles.roleDescription}>{job.role_description}</Text>
+                <Text style={styles.roleDescription} wrap={false}>
+                  {job.role_description}
+                </Text>
               )}
-              {!!job.sentences.length && <Text style={styles.bold}>Key Contributions</Text>}
-            </View>
 
-            {job.sentences.map((sentence, i) => (
-              <View
-                key={i}
-                style={[styles.bullet, i === job.sentences.length - 1 ? { marginBottom: 0 } : {}]}
-                wrap={false}
-              >
-                <Text style={styles.bulletDot}>•</Text>
-                <Text style={styles.bulletText}>{sentence}</Text>
+              <View style={styles.bullets}>
+                {job.sentences.map((sentence, i) => (
+                  <View key={i} wrap={false}>
+                    {i === 0 && <Text style={styles.bold}>Key Contributions</Text>}
+                    <View style={styles.bullet}>
+                      <Text style={styles.bulletDot}>•</Text>
+                      <Text style={styles.bulletText}>{sentence}</Text>
+                    </View>
+                    {i === job.sentences.length - 1 && technologies}
+                  </View>
+                ))}
               </View>
-            ))}
 
-            {!!job.used_skills?.length && (
-              <Text>
-                <Text style={styles.bold}>Technologies: </Text>
-                {job.used_skills.join(', ')}
-              </Text>
-            )}
-          </View>
-        ))}
+              {!job.sentences.length && technologies}
+            </View>
+          );
+        })}
       </Section>
     );
 
   const renderEducation = () =>
     !!resume.education.length && (
       <Section title="Education">
-        {resume.education.map((edu, index) => (
-          <View key={index} style={{ marginBottom: 4 }} wrap={false}>
-            <View style={styles.row}>
-              <Text style={styles.bold}>{edu.institution}</Text>
-              <Text style={styles.muted}>{edu.period}</Text>
+        <View style={styles.educations}>
+          {resume.education.map((edu, index) => (
+            <View key={index} wrap={false}>
+              <View style={styles.row}>
+                <Text style={styles.bold}>{edu.institution}</Text>
+                <Text style={styles.muted}>{edu.period}</Text>
+              </View>
+              <Text>{[edu.degree, edu.major].filter(Boolean).join(', ')}</Text>
             </View>
-            <Text>{[edu.degree, edu.major].filter(Boolean).join(', ')}</Text>
-          </View>
-        ))}
+          ))}
+        </View>
       </Section>
     );
 
