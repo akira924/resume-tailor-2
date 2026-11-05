@@ -68,7 +68,7 @@ export function parseResumeJson(text: string): ParseResult {
       major: str(edu.major),
       period: str(edu.period),
     })),
-    cetification: objList(data.cetification).map((cert) => ({
+    certification: objList(data.certification).map((cert) => ({
       name: str(cert.name),
       institution: str(cert.institution),
       date: str(cert.date),

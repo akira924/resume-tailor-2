@@ -48,6 +48,5 @@ export type IResume = {
   skillsets: IResumeSkillset[];
   experience: IResumeExperience[];
   education: IResumeEducation[];
-  /** Key is spelled this way in the source JSON. */
-  cetification: IResumeCertification[];
+  certification: IResumeCertification[];
 };

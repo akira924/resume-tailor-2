@@ -54,12 +54,7 @@ const styles = StyleSheet.create({
   muted: { color: COLORS.secondary },
   // Spacing between items uses rowGap on the parent, not marginBottom on the item: react-pdf
   // moves a whole View to the next page when it fits but its marginBottom does not.
-  // Skill columns are Views so that when a row splits across pages, the continuation
-  // keeps its left column's width and the wrapped text stays aligned.
   skills: { rowGap: 2 },
-  skillRow: { flexDirection: 'row' },
-  skillCategory: { width: 150 },
-  skillList: { flex: 1 },
   // experience
   // Jobs must stay direct children of the section, with no wrapper View: if a wrapper's first
   // job can't start on the page, react-pdf puts the whole job on that page and cuts off its text.
@@ -121,20 +116,20 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export function ResumePdfDocument({ resume }: Props) {
   const { personal_info, online_presence } = resume;
 
+  // Personal details on one line, online presence on the next.
   const contact = [
-    personal_info.email,
-    personal_info.phone,
-    personal_info.location,
-    online_presence.linkedin,
-    online_presence.github,
-    online_presence.website,
-  ].filter(Boolean);
+    [personal_info.email, personal_info.phone, personal_info.location],
+    [online_presence.linkedin, online_presence.github, online_presence.website],
+  ]
+    .map((items) => items.filter(Boolean).join('  |  '))
+    .filter(Boolean)
+    .join('\n');
 
   const renderHeader = () => (
     <View style={styles.header}>
       <Text style={styles.name}>{personal_info.name}</Text>
       {!!resume.headline && <Text style={styles.headline}>{resume.headline}</Text>}
-      {!!contact.length && <Text style={styles.contact}>{contact.join('  |  ')}</Text>}
+      {!!contact && <Text style={styles.contact}>{contact}</Text>}
     </View>
   );
 
@@ -150,16 +145,10 @@ export function ResumePdfDocument({ resume }: Props) {
       <Section title="Skills">
         <View style={styles.skills}>
           {resume.skillsets.map((set, index) => (
-            <View key={index} style={styles.skillRow}>
-              <View style={styles.skillCategory}>
-                <Text style={styles.bold} {...BREAK_ANY_LINE}>
-                  {set.category}
-                </Text>
-              </View>
-              <View style={styles.skillList}>
-                <Text {...BREAK_ANY_LINE}>{set.skills.join(', ')}</Text>
-              </View>
-            </View>
+            <Text key={index} {...BREAK_ANY_LINE}>
+              <Text style={styles.bold}>{set.category}: </Text>
+              {set.skills.join(', ')}
+            </Text>
           ))}
         </View>
       </Section>
@@ -233,9 +222,9 @@ export function ResumePdfDocument({ resume }: Props) {
     );
 
   const renderCertifications = () =>
-    !!resume.cetification.length && (
+    !!resume.certification.length && (
       <Section title="Certifications">
-        {resume.cetification.map((cert, index) => (
+        {resume.certification.map((cert, index) => (
           <View key={index} style={styles.row} wrap={false}>
             <Text>
               <Text style={styles.bold}>{cert.name}</Text>
