@@ -135,14 +135,14 @@ export function ResumePdfDocument({ resume }: Props) {
 
   const renderSummary = () =>
     !!resume.summary && (
-      <Section title="Summary">
+      <Section title="Professional Summary">
         <Text {...BREAK_ANY_LINE}>{resume.summary}</Text>
       </Section>
     );
 
   const renderSkills = () =>
     !!resume.skillsets.length && (
-      <Section title="Skills">
+      <Section title="Technical Skills">
         <View style={styles.skills}>
           {resume.skillsets.map((set, index) => (
             <Text key={index} {...BREAK_ANY_LINE}>
@@ -156,7 +156,7 @@ export function ResumePdfDocument({ resume }: Props) {
 
   const renderExperience = () =>
     !!resume.experience.length && (
-      <Section title="Experience">
+      <Section title="Work Experience">
         {resume.experience.map((job, index) => {
           const technologies = !!job.used_skills?.length && (
             <Text wrap={false}>
