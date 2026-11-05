@@ -1,5 +1,6 @@
 import type { IResume } from 'src/types/resume';
 
+import { useMemo } from 'react';
 import { Page, Text, View, Font, Document, PDFViewer, StyleSheet } from '@react-pdf/renderer';
 
 // ----------------------------------------------------------------------
@@ -69,9 +70,13 @@ type Props = {
 };
 
 export function ResumePDFViewer({ resume }: Props) {
+  // PDFViewer regenerates the PDF whenever its children reference changes, so keep the
+  // element stable across parent re-renders (e.g. every keystroke in the JSON editor).
+  const pdfDocument = useMemo(() => <ResumePdfDocument resume={resume} />, [resume]);
+
   return (
     <PDFViewer width="100%" height="100%" style={{ border: 'none' }}>
-      <ResumePdfDocument resume={resume} />
+      {pdfDocument}
     </PDFViewer>
   );
 }
