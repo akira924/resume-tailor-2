@@ -71,7 +71,10 @@ export const FONT_FAMILIES = [
   { value: 'Lora', label: 'Lora' },
 ];
 
-/** `accent` colors the name and section titles, `divider` the section title borders. */
+/**
+ * `accent` colors the name, section titles and the first field of each company entry,
+ * `divider` the section title borders.
+ */
 export const COLOR_THEMES = [
   { value: 'classic', label: 'Classic', accent: '#1C252E', divider: '#C4CDD5' },
   { value: 'navy', label: 'Navy', accent: '#1F3A68', divider: '#B4C2DA' },

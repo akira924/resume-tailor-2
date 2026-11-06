@@ -86,6 +86,7 @@ const createStyles = (settings: ResumeSettings) => {
     // Jobs must stay direct children of the section, with no wrapper View: if a wrapper's first
     // job can't start on the page, react-pdf puts the whole job on that page and cuts off its text.
     nextJob: { marginTop: 8 },
+    entryHighlight: { fontWeight: 700, color: theme.accent },
     roleDescription: { color: COLORS.secondary, marginTop: 2 },
     bullets: { rowGap: 1.5 },
     bullet: { flexDirection: 'row' },
@@ -189,8 +190,15 @@ export function ResumePdfDocument({ resume, settings }: Props) {
       </View>
     );
 
+  // Each layout highlights whichever of company and job title comes first.
   const renderCompanyEntry = (job: IResume['experience'][number]) => {
-    const companyAndTitle = [job.company, job.title].filter(Boolean).join(' - ');
+    const [lead, ...others] = [job.company, job.title].filter(Boolean);
+    const companyAndTitle = (
+      <>
+        <Text style={styles.entryHighlight}>{lead}</Text>
+        {others.map((text) => ` - ${text}`).join('')}
+      </>
+    );
     const periodAndLocation = [job.period, job.location].filter(Boolean).join(' | ');
 
     switch (settings.companyEntry) {
@@ -198,7 +206,7 @@ export function ResumePdfDocument({ resume, settings }: Props) {
         return (
           <>
             <View style={styles.row}>
-              <Text style={[styles.bold, styles.rowStart]}>{job.company}</Text>
+              <Text style={[styles.entryHighlight, styles.rowStart]}>{job.company}</Text>
               <Text style={[styles.muted, styles.rowEnd]}>{job.location}</Text>
             </View>
             <View style={styles.row}>
@@ -225,7 +233,7 @@ export function ResumePdfDocument({ resume, settings }: Props) {
         return (
           <>
             <View style={styles.row}>
-              <Text style={[styles.bold, styles.rowStart]}>{job.title}</Text>
+              <Text style={[styles.entryHighlight, styles.rowStart]}>{job.title}</Text>
               <Text style={[styles.muted, styles.rowEnd]}>{job.period}</Text>
             </View>
             <View style={styles.row}>
