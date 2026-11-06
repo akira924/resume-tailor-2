@@ -14,6 +14,7 @@ import { ApiError, getSavedResume } from './auth/api';
 import { getToken } from './auth/token-storage';
 import { SettingsSection } from './settings-section';
 import { validateResumeJson } from './resume/validate-resume';
+import { getDownloadFolder, ensureFolderPermission } from './resume/download-folder';
 import { normalizeResumeSettings } from '../../vite-ts/src/sections/resume/resume-settings';
 
 // ----------------------------------------------------------------------
@@ -24,16 +25,20 @@ const EDITOR_EXTENSIONS = [json(), EditorView.lineWrapping];
 
 const EDITOR_SETUP = { foldGutter: false, highlightActiveLine: false };
 
+type Notice = { severity: 'error' | 'success'; message: string };
+
 export function WorkspaceView() {
   const auth = useAuth();
 
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [errorOpen, setErrorOpen] = useState(false);
+  const [notice, setNotice] = useState<Notice>({ severity: 'error', message: '' });
+  const [noticeOpen, setNoticeOpen] = useState(false);
 
-  const showError = (message: string) => {
-    setErrorMessage(message);
-    setErrorOpen(true);
+  const showNotice = (severity: Notice['severity'], message: string) => {
+    setNotice({ severity, message });
+    setNoticeOpen(true);
   };
+
+  const showError = (message: string) => showNotice('error', message);
 
   const generateResume = async (text: string) => {
     const { resume, error } = validateResumeJson(text);
@@ -44,6 +49,13 @@ export function WorkspaceView() {
     }
 
     try {
+      const folder = await getDownloadFolder();
+
+      if (folder && !(await ensureFolderPermission(folder))) {
+        showError(`Chrome needs your permission to save to "${folder.name}".`);
+        return;
+      }
+
       // Fetched on every click, so a design saved on the website applies straight away.
       const saved = await getSavedResume((await getToken()) ?? '');
       const settings = normalizeResumeSettings(saved.resume?.settings ?? {});
@@ -51,7 +63,10 @@ export function WorkspaceView() {
       // Loaded on demand: the PDF renderer is by far the largest part of the extension.
       const { downloadResumePdf } = await import('./resume/download-resume-pdf');
 
-      await downloadResumePdf(resume, settings);
+      const savedAs = await downloadResumePdf(resume, settings, folder);
+
+      // Chrome only shows its own download notice for a normal download.
+      if (folder && savedAs) showNotice('success', `Saved to ${folder.name}/${savedAs}`);
     } catch (generateError) {
       console.error(generateError);
 
@@ -60,6 +75,9 @@ export function WorkspaceView() {
 
         // The session is over: this sends the user back to the sign-in page with the reason.
         if (generateError.status === 401) auth.retry();
+      } else if (generateError instanceof DOMException) {
+        // Most likely the folder was moved or deleted after it was picked.
+        showError('Could not save to the download folder. Please choose it again in Settings.');
       } else {
         showError('Could not generate the PDF. Please try again.');
       }
@@ -81,7 +99,7 @@ export function WorkspaceView() {
       >
         <JsonSection title="Resume" onGenerate={generateResume} />
         <JsonSection title="Cover Letter" />
-        <SettingsSection />
+        <SettingsSection onError={showError} />
       </Box>
 
       <Divider />
@@ -108,17 +126,17 @@ export function WorkspaceView() {
       </Box>
 
       <Snackbar
-        open={errorOpen}
+        open={noticeOpen}
         autoHideDuration={3000}
         // Keeps counting down if the user has moved on to the web page next to the panel.
         disableWindowBlurListener
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         onClose={(_event, reason) => {
-          if (reason !== 'clickaway') setErrorOpen(false);
+          if (reason !== 'clickaway') setNoticeOpen(false);
         }}
       >
-        <Alert severity="error" variant="filled" sx={{ width: 1 }}>
-          {errorMessage}
+        <Alert severity={notice.severity} variant="filled" sx={{ width: 1 }}>
+          {notice.message}
         </Alert>
       </Snackbar>
     </Box>

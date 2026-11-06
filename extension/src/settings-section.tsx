@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+
+import { getDownloadFolder, setDownloadFolder } from './resume/download-folder';
 
 import {
   getTrigger,
@@ -13,7 +16,7 @@ import {
 
 // ----------------------------------------------------------------------
 
-export function SettingsSection() {
+export function SettingsSection({ onError }: { onError: (message: string) => void }) {
   return (
     <Box
       component="section"
@@ -25,6 +28,66 @@ export function SettingsSection() {
       </Typography>
 
       <PromptTriggerField />
+
+      <DownloadFolderField onError={onError} />
+    </Box>
+  );
+}
+
+// ----------------------------------------------------------------------
+
+function DownloadFolderField({ onError }: { onError: (message: string) => void }) {
+  const [folder, setFolder] = useState<FileSystemDirectoryHandle | null>(null);
+
+  useEffect(() => {
+    getDownloadFolder().then(setFolder, console.error);
+  }, []);
+
+  const save = async (next: FileSystemDirectoryHandle | null) => {
+    await setDownloadFolder(next);
+    setFolder(next);
+  };
+
+  const handleBrowse = async () => {
+    try {
+      await save(await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'downloads' }));
+    } catch (error) {
+      // AbortError is the user closing the dialog without choosing a folder.
+      if ((error as DOMException).name !== 'AbortError') {
+        console.error(error);
+        onError('Could not use that folder. Please choose another.');
+      }
+    }
+  };
+
+  return (
+    <Box sx={{ gap: 1, display: 'flex', alignItems: 'flex-start' }}>
+      <TextField
+        fullWidth
+        size="small"
+        label="Download location"
+        value={folder ? folder.name : 'Downloads (default)'}
+        slotProps={{ inputLabel: { shrink: true }, input: { readOnly: true } }}
+      />
+
+      <Button
+        color="inherit"
+        variant="outlined"
+        onClick={handleBrowse}
+        sx={{ flexShrink: 0, height: 40 }}
+      >
+        Browse
+      </Button>
+
+      {folder && (
+        <Button
+          color="inherit"
+          onClick={() => save(null).catch(console.error)}
+          sx={{ flexShrink: 0, height: 40 }}
+        >
+          Reset
+        </Button>
+      )}
     </Box>
   );
 }

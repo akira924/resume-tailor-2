@@ -36,7 +36,8 @@ export default defineConfig(({ mode }) => {
     },
     side_panel: { default_path: 'sidepanel.html' },
     background: { service_worker: 'background.js', type: 'module' },
-    permissions: ['sidePanel', 'storage'],
+    // downloads: only this can save into a subfolder of Chrome's download folder.
+    permissions: ['sidePanel', 'storage', 'downloads'],
     // The PDF renderer's layout engine is WebAssembly, which Chrome blocks by default.
     content_security_policy: {
       extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
