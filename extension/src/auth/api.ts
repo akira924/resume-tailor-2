@@ -1,3 +1,7 @@
+import type { IProfile } from '../../../vite-ts/src/types/profile';
+
+// ----------------------------------------------------------------------
+
 export type User = {
   id: string;
   email: string;
@@ -65,6 +69,11 @@ export const signUp = (params: SignUpParams) =>
 
 export const getMe = (accessToken: string) =>
   request<{ user: User }>('/api/auth/me', {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+export const getProfile = (accessToken: string) =>
+  request<{ profile: IProfile }>('/api/profile', {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 

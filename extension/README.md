@@ -27,4 +27,6 @@ The API defaults to `http://localhost:7272`. To use another one, copy `.env.exam
 
 The resume PDF is the website's own component: the extension imports it from `../vite-ts/src/sections/resume` and copies the fonts from `../vite-ts/public/fonts` at build time. Rebuild after changing either, so both keep producing the same resume.
 
+The AI prompt shortcut (`src/expander`) uses the website's `buildAiPrompt`. A content script on every page watches for the shortcut being typed and asks the background worker for the prompt, so the sign-in token never reaches web pages. After reloading the extension, reload any open tabs too: they keep running the old content script until then.
+
 Chrome decides which side the panel opens on. The default is the right; users can change it in Chrome's appearance settings.

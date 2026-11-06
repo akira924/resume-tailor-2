@@ -13,10 +13,13 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
-      "src/types/*": ["../vite-ts/src/types/*"],
+      "src/*": ["../vite-ts/src/*"],
       "react": ["./node_modules/@types/react"],
       "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime"],
-      "@react-pdf/renderer": ["./node_modules/@react-pdf/renderer"]
+      "@react-pdf/renderer": ["./node_modules/@react-pdf/renderer"],
+      "react-phone-number-input/input": ["./node_modules/react-phone-number-input/input/index.d.ts"],
+      "dayjs": ["./node_modules/dayjs"],
+      "dayjs/*": ["./node_modules/dayjs/*"]
     }
   },
   "include": ["src", "vite.config.ts"]

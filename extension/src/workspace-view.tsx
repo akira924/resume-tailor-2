@@ -12,6 +12,7 @@ import Typography from '@mui/material/Typography';
 import { useAuth } from './auth/auth-context';
 import { ApiError, getSavedResume } from './auth/api';
 import { getToken } from './auth/token-storage';
+import { SettingsSection } from './settings-section';
 import { validateResumeJson } from './resume/validate-resume';
 import { normalizeResumeSettings } from '../../vite-ts/src/sections/resume/resume-settings';
 
@@ -80,6 +81,7 @@ export function WorkspaceView() {
       >
         <JsonSection title="Resume" onGenerate={generateResume} />
         <JsonSection title="Cover Letter" />
+        <SettingsSection />
       </Box>
 
       <Divider />
