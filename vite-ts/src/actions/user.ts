@@ -12,7 +12,9 @@ import { useAuthContext } from 'src/auth/hooks';
 // ----------------------------------------------------------------------
 
 const swrOptions: SWRConfiguration = {
-  revalidateIfStale: false,
+  // Must stay on: `mutate` from user events can't refetch while the user list isn't mounted,
+  // so the cached list has to be refreshed when the page opens.
+  revalidateIfStale: true,
   revalidateOnFocus: false,
   revalidateOnReconnect: false,
 };

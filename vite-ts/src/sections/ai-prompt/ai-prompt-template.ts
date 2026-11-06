@@ -91,11 +91,11 @@ JOB TITLES AND HEADLINE
 EXPERIENCE (non-negotiable)
 Must reference the actual project, platform, product, or client from the company and the employment period (if available).
 "sentences":
-- DO NOT include the name, company name, or pronouns such as he or she
+- DO NOT include the name, company name, or pronouns such as he or she.
 - Every sentence must be 150–220 characters.
 - Every sentence must end with a period.
 - Every sentence must reference its company industry relevance and career growth.
-- Every sentence must be detailed, specific, concrete and tailored
+- Every sentence must be detailed, specific, concrete and tailored.
 - Every sentence must include technically rich descriptions of the role, specific contributions, and technologies used.
 - Every sentence must include ONLY technologies released before its company period.
 "used_skills": Must be only 4-12 technologies from that role's evidence line, the posting's terms first.
