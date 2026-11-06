@@ -1,10 +1,11 @@
 import type { IResume } from 'src/types/resume';
+import type { ResumeSettings } from '../resume-settings';
 
 import { json } from '@codemirror/lang-json';
 import CodeMirror from '@uiw/react-codemirror';
-import { setStorage } from 'minimal-shared/utils';
 import { useDebounce } from 'minimal-shared/hooks';
-import { useState, useEffect, useCallback } from 'react';
+import { getStorage, setStorage } from 'minimal-shared/utils';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -23,7 +24,13 @@ import { Iconify } from 'src/components/iconify';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { ResumePDFViewer } from '../resume-pdf';
+import { ResumeSettingsPanel } from '../resume-settings-panel';
 import { parseResumeJson, RESUME_STORAGE_KEY, readStoredResumeJson } from '../resume-utils';
+import {
+  normalizeResumeSettings,
+  DEFAULT_RESUME_SETTINGS,
+  RESUME_SETTINGS_STORAGE_KEY,
+} from '../resume-settings';
 
 // ----------------------------------------------------------------------
 
@@ -36,6 +43,18 @@ const PREVIEW_HEIGHT = { xs: 640, md: 'max(720px, calc(100vh - 160px))' };
 // Defined once so CodeMirror doesn't reconfigure on every render.
 const EDITOR_EXTENSIONS = [json()];
 
+const DEFAULT_SETTINGS_JSON = JSON.stringify(DEFAULT_RESUME_SETTINGS);
+
+/**
+ * Keeps the control panel on screen, beside the editor and preview, while the page scrolls.
+ * Never taller than the preview, or it would slide under the header at the end of the page.
+ */
+const SETTINGS_PANEL_SX = {
+  position: { lg: 'sticky' },
+  top: { lg: 'calc(var(--layout-header-desktop-height) + 16px)' },
+  maxHeight: { lg: 'calc(100vh - 160px)' },
+};
+
 export function ResumeView() {
   const { mode, systemMode } = useColorScheme();
   const editorTheme = (mode === 'system' ? systemMode : mode) === 'dark' ? 'dark' : 'light';
@@ -44,8 +63,30 @@ export function ResumeView() {
   const [resume, setResume] = useState<IResume>(() => parseResumeJson(jsonText).resume ?? _resume);
   const [jsonError, setJsonError] = useState<string | null>(null);
 
-  // Re-rendering the PDF is expensive, so wait for a pause in typing.
+  // Read up front, so the first PDF generated already uses the stored design.
+  const [settings, setSettings] = useState<ResumeSettings>(() =>
+    normalizeResumeSettings(getStorage<Partial<ResumeSettings>>(RESUME_SETTINGS_STORAGE_KEY) ?? {})
+  );
+  const settingsJson = JSON.stringify(settings);
+
+  // Re-rendering the PDF is expensive, so wait for a pause in typing or slider dragging.
   const debouncedText = useDebounce(jsonText, 500);
+  const debouncedSettingsJson = useDebounce(settingsJson, 300);
+  const previewSettings: ResumeSettings = useMemo(
+    () => JSON.parse(debouncedSettingsJson),
+    [debouncedSettingsJson]
+  );
+
+  useEffect(() => {
+    setStorage(RESUME_SETTINGS_STORAGE_KEY, settings);
+  }, [settings]);
+
+  const handleChangeSettings = useCallback(
+    (update: Partial<ResumeSettings>) => setSettings((prev) => ({ ...prev, ...update })),
+    []
+  );
+
+  const handleResetSettings = useCallback(() => setSettings(DEFAULT_RESUME_SETTINGS), []);
 
   useEffect(() => {
     const result = parseResumeJson(debouncedText);
@@ -162,7 +203,7 @@ export function ResumeView() {
       />
 
       <div style={{ flex: '1 1 auto', minHeight: 0 }}>
-        <ResumePDFViewer resume={resume} />
+        <ResumePDFViewer resume={resume} settings={previewSettings} />
       </div>
     </Card>
   );
@@ -175,10 +216,27 @@ export function ResumeView() {
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <Stack spacing={3}>
-        {renderJsonPanel()}
-        {renderPreviewPanel()}
-      </Stack>
+      <Box
+        sx={{
+          gap: 3,
+          display: 'grid',
+          alignItems: 'start',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'minmax(0, 1fr) 340px' },
+        }}
+      >
+        <Stack spacing={3} sx={{ minWidth: 0 }}>
+          {renderJsonPanel()}
+          {renderPreviewPanel()}
+        </Stack>
+
+        <ResumeSettingsPanel
+          settings={settings}
+          canReset={settingsJson !== DEFAULT_SETTINGS_JSON}
+          onChange={handleChangeSettings}
+          onReset={handleResetSettings}
+          sx={SETTINGS_PANEL_SX}
+        />
+      </Box>
     </DashboardContent>
   );
 }

@@ -1,14 +1,25 @@
 import type { IResume } from 'src/types/resume';
+import type { ResumeSettings, ResumeSectionId } from './resume-settings';
 
-import { useMemo } from 'react';
+import { useMemo, Fragment } from 'react';
 import { Page, Text, View, Font, Document, PDFViewer, StyleSheet } from '@react-pdf/renderer';
+
+import { COLOR_THEMES, FONT_FAMILIES } from './resume-settings';
 
 // ----------------------------------------------------------------------
 
-Font.register({
-  family: 'Roboto',
-  // fonts from public folder
-  fonts: [{ src: '/fonts/Roboto-Regular.ttf' }, { src: '/fonts/Roboto-Bold.ttf', fontWeight: 700 }],
+// react-pdf only downloads the files of a family once a document uses it.
+FONT_FAMILIES.forEach(({ value: family }) => {
+  const file = family.replace(/\s/g, '');
+
+  Font.register({
+    family,
+    // fonts from public folder
+    fonts: [
+      { src: `/fonts/${file}-Regular.ttf` },
+      { src: `/fonts/${file}-Bold.ttf`, fontWeight: 700 },
+    ],
+  });
 });
 
 // Disable hyphenation so long tech terms (e.g. "ASP.NET") never get split.
@@ -17,56 +28,75 @@ Font.registerHyphenationCallback((word) => [word]);
 const COLORS = {
   text: '#1C252E',
   secondary: '#637381',
-  divider: '#C4CDD5',
 };
 
-const styles = StyleSheet.create({
-  page: {
-    fontFamily: 'Roboto',
-    fontSize: 9.5,
-    lineHeight: 1.45,
-    color: COLORS.text,
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 36,
-    paddingHorizontal: 42,
-  },
-  // header
-  header: { alignItems: 'center', marginBottom: 10 },
-  name: { fontSize: 20, fontWeight: 700, lineHeight: 1.2 },
-  headline: { fontSize: 11, color: COLORS.secondary, marginTop: 2 },
-  contact: { fontSize: 9, color: COLORS.secondary, marginTop: 4, textAlign: 'center' },
-  // section
-  section: { marginTop: 10 },
-  sectionTitle: {
-    fontSize: 10.5,
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    paddingBottom: 2,
-    marginBottom: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.divider,
-    borderStyle: 'solid',
-  },
-  // rows
-  row: { flexDirection: 'row', justifyContent: 'space-between' },
-  bold: { fontWeight: 700 },
-  muted: { color: COLORS.secondary },
-  // Spacing between items uses rowGap on the parent, not marginBottom on the item: react-pdf
-  // moves a whole View to the next page when it fits but its marginBottom does not.
-  skills: { rowGap: 2 },
-  // experience
-  // Jobs must stay direct children of the section, with no wrapper View: if a wrapper's first
-  // job can't start on the page, react-pdf puts the whole job on that page and cuts off its text.
-  nextJob: { marginTop: 8 },
-  roleDescription: { color: COLORS.secondary, marginTop: 2 },
-  bullets: { rowGap: 1.5 },
-  bullet: { flexDirection: 'row' },
-  bulletDot: { width: 10 },
-  bulletText: { flex: 1 },
-  // education
-  educations: { rowGap: 4 },
-});
+const createStyles = (settings: ResumeSettings) => {
+  const theme = COLOR_THEMES.find(({ value }) => value === settings.colorTheme) ?? COLOR_THEMES[0];
+  const headerAlign = settings.headerLayout === 'center' ? 'center' : 'left';
+
+  return StyleSheet.create({
+    page: {
+      fontFamily: settings.fontFamily,
+      fontSize: settings.fontSizeBody,
+      lineHeight: 1.45,
+      color: COLORS.text,
+      backgroundColor: '#FFFFFF',
+      paddingVertical: settings.marginVertical,
+      paddingHorizontal: settings.marginHorizontal,
+    },
+    // header
+    header: { alignItems: headerAlign === 'center' ? 'center' : 'flex-start', marginBottom: 10 },
+    hybridHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+    hybridIdentity: { flex: 1, paddingRight: 16 },
+    hybridContact: { maxWidth: '50%', color: COLORS.secondary, textAlign: 'right' },
+    name: {
+      fontSize: settings.fontSizeName,
+      fontWeight: 700,
+      lineHeight: 1.2,
+      color: theme.accent,
+    },
+    headline: { fontSize: settings.fontSizeHeadline, color: COLORS.secondary, marginTop: 2 },
+    contact: { color: COLORS.secondary, marginTop: 4, textAlign: headerAlign },
+    // section
+    section: { marginTop: 10 },
+    sectionTitle: {
+      fontSize: settings.fontSizeSectionTitle,
+      fontWeight: 700,
+      color: theme.accent,
+      textAlign: settings.sectionTitleAlign,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      paddingBottom: 2,
+      marginBottom: 5,
+      borderBottomWidth: settings.sectionTitleBorder ? 1 : 0,
+      borderBottomColor: theme.divider,
+      borderStyle: 'solid',
+    },
+    // rows
+    row: { flexDirection: 'row', justifyContent: 'space-between' },
+    // A long left text wraps instead of pushing the right text off the page.
+    rowStart: { flex: 1, paddingRight: 12 },
+    rowEnd: { flexShrink: 0 },
+    bold: { fontWeight: 700 },
+    muted: { color: COLORS.secondary },
+    // Spacing between items uses rowGap on the parent, not marginBottom on the item: react-pdf
+    // moves a whole View to the next page when it fits but its marginBottom does not.
+    skills: { rowGap: 2 },
+    // experience
+    // Jobs must stay direct children of the section, with no wrapper View: if a wrapper's first
+    // job can't start on the page, react-pdf puts the whole job on that page and cuts off its text.
+    nextJob: { marginTop: 8 },
+    roleDescription: { color: COLORS.secondary, marginTop: 2 },
+    bullets: { rowGap: 1.5 },
+    bullet: { flexDirection: 'row' },
+    bulletDot: { width: 10 },
+    bulletText: { flex: 1 },
+    // education
+    educations: { rowGap: 4 },
+  });
+};
+
+type ResumeStyles = ReturnType<typeof createStyles>;
 
 // Page-break rules: each of these stays together on one page (wrap={false}).
 //  - Section title and its border line
@@ -86,12 +116,16 @@ const BREAK_ANY_LINE = { orphans: 1, widows: 1 };
 
 type Props = {
   resume: IResume;
+  settings: ResumeSettings;
 };
 
-export function ResumePDFViewer({ resume }: Props) {
+export function ResumePDFViewer({ resume, settings }: Props) {
   // PDFViewer regenerates the PDF whenever its children reference changes, so keep the
   // element stable across parent re-renders (e.g. every keystroke in the JSON editor).
-  const pdfDocument = useMemo(() => <ResumePdfDocument resume={resume} />, [resume]);
+  const pdfDocument = useMemo(
+    () => <ResumePdfDocument resume={resume} settings={settings} />,
+    [resume, settings]
+  );
 
   return (
     <PDFViewer width="100%" height="100%" style={{ border: 'none' }}>
@@ -102,7 +136,13 @@ export function ResumePDFViewer({ resume }: Props) {
 
 // ----------------------------------------------------------------------
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+type SectionProps = {
+  title: string;
+  styles: ResumeStyles;
+  children: React.ReactNode;
+};
+
+function Section({ title, styles, children }: SectionProps) {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle} wrap={false}>
@@ -113,36 +153,100 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export function ResumePdfDocument({ resume }: Props) {
+export function ResumePdfDocument({ resume, settings }: Props) {
   const { personal_info, online_presence } = resume;
 
-  // Personal details on one line, online presence on the next.
-  const contact = [
+  const styles = createStyles(settings);
+
+  const contactGroups = [
     [personal_info.email, personal_info.phone, personal_info.location],
     [online_presence.linkedin, online_presence.github, online_presence.website],
-  ]
-    .map((items) => items.filter(Boolean).join('  |  '))
+  ].map((items) => items.filter(Boolean));
+
+  // Personal details on one line, online presence on the next.
+  const contact = contactGroups
+    .map((items) => items.join('  |  '))
     .filter(Boolean)
     .join('\n');
 
-  const renderHeader = () => (
-    <View style={styles.header}>
+  const renderIdentity = () => (
+    <>
       <Text style={styles.name}>{personal_info.name}</Text>
       {!!resume.headline && <Text style={styles.headline}>{resume.headline}</Text>}
-      {!!contact && <Text style={styles.contact}>{contact}</Text>}
-    </View>
+    </>
   );
+
+  const renderHeader = () =>
+    settings.headerLayout === 'hybrid' ? (
+      <View style={styles.hybridHeader}>
+        <View style={styles.hybridIdentity}>{renderIdentity()}</View>
+        {!!contact && <Text style={styles.hybridContact}>{contactGroups.flat().join('\n')}</Text>}
+      </View>
+    ) : (
+      <View style={styles.header}>
+        {renderIdentity()}
+        {!!contact && <Text style={styles.contact}>{contact}</Text>}
+      </View>
+    );
+
+  const renderCompanyEntry = (job: IResume['experience'][number]) => {
+    const companyAndTitle = [job.company, job.title].filter(Boolean).join(' - ');
+    const periodAndLocation = [job.period, job.location].filter(Boolean).join(' | ');
+
+    switch (settings.companyEntry) {
+      case 'companyFirst':
+        return (
+          <>
+            <View style={styles.row}>
+              <Text style={[styles.bold, styles.rowStart]}>{job.company}</Text>
+              <Text style={[styles.muted, styles.rowEnd]}>{job.location}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.rowStart}>{job.title}</Text>
+              <Text style={[styles.muted, styles.rowEnd]}>{job.period}</Text>
+            </View>
+          </>
+        );
+      case 'stacked':
+        return (
+          <>
+            <Text style={styles.bold}>{companyAndTitle}</Text>
+            <Text style={styles.muted}>{periodAndLocation}</Text>
+          </>
+        );
+      case 'singleRow':
+        return (
+          <View style={styles.row}>
+            <Text style={[styles.bold, styles.rowStart]}>{companyAndTitle}</Text>
+            <Text style={[styles.muted, styles.rowEnd]}>{periodAndLocation}</Text>
+          </View>
+        );
+      default:
+        return (
+          <>
+            <View style={styles.row}>
+              <Text style={[styles.bold, styles.rowStart]}>{job.title}</Text>
+              <Text style={[styles.muted, styles.rowEnd]}>{job.period}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.rowStart}>{job.company}</Text>
+              <Text style={[styles.muted, styles.rowEnd]}>{job.location}</Text>
+            </View>
+          </>
+        );
+    }
+  };
 
   const renderSummary = () =>
     !!resume.summary && (
-      <Section title="Professional Summary">
+      <Section title="Professional Summary" styles={styles}>
         <Text {...BREAK_ANY_LINE}>{resume.summary}</Text>
       </Section>
     );
 
   const renderSkills = () =>
     !!resume.skillsets.length && (
-      <Section title="Technical Skills">
+      <Section title="Technical Skills" styles={styles}>
         <View style={styles.skills}>
           {resume.skillsets.map((set, index) => (
             <Text key={index} {...BREAK_ANY_LINE}>
@@ -156,7 +260,7 @@ export function ResumePdfDocument({ resume }: Props) {
 
   const renderExperience = () =>
     !!resume.experience.length && (
-      <Section title="Work Experience">
+      <Section title="Work Experience" styles={styles}>
         {resume.experience.map((job, index) => {
           const technologies = !!job.used_skills?.length && (
             <Text wrap={false}>
@@ -167,16 +271,7 @@ export function ResumePdfDocument({ resume }: Props) {
 
           return (
             <View key={index} style={index > 0 ? styles.nextJob : undefined}>
-              <View wrap={false}>
-                <View style={styles.row}>
-                  <Text style={styles.bold}>{job.title}</Text>
-                  <Text style={styles.muted}>{job.period}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text>{job.company}</Text>
-                  <Text style={styles.muted}>{job.location}</Text>
-                </View>
-              </View>
+              <View wrap={false}>{renderCompanyEntry(job)}</View>
 
               {!!job.role_description && (
                 <Text style={styles.roleDescription} wrap={false}>
@@ -206,7 +301,7 @@ export function ResumePdfDocument({ resume }: Props) {
 
   const renderEducation = () =>
     !!resume.education.length && (
-      <Section title="Education">
+      <Section title="Education" styles={styles}>
         <View style={styles.educations}>
           {resume.education.map((edu, index) => (
             <View key={index} wrap={false}>
@@ -223,7 +318,7 @@ export function ResumePdfDocument({ resume }: Props) {
 
   const renderCertifications = () =>
     !!resume.certification.length && (
-      <Section title="Certifications">
+      <Section title="Certifications" styles={styles}>
         {resume.certification.map((cert, index) => (
           <View key={index} style={styles.row} wrap={false}>
             <Text>
@@ -236,15 +331,23 @@ export function ResumePdfDocument({ resume }: Props) {
       </Section>
     );
 
+  const SECTION_RENDERERS: Record<ResumeSectionId, () => React.ReactNode> = {
+    skills: renderSkills,
+    experience: renderExperience,
+    education: renderEducation,
+    certification: renderCertifications,
+  };
+
   return (
     <Document title={personal_info.name ? `${personal_info.name} - Resume` : 'Resume'}>
-      <Page size="LETTER" style={styles.page}>
+      {/* react-pdf's reconciler doesn't support moving keyed children (a moved section would end
+          up in the PDF twice), so reordering rebuilds the page instead. */}
+      <Page key={settings.sectionOrder.join()} size="LETTER" style={styles.page}>
         {renderHeader()}
         {renderSummary()}
-        {renderSkills()}
-        {renderExperience()}
-        {renderEducation()}
-        {renderCertifications()}
+        {settings.sectionOrder.map((id) => (
+          <Fragment key={id}>{SECTION_RENDERERS[id]()}</Fragment>
+        ))}
       </Page>
     </Document>
   );
