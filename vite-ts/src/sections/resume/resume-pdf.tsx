@@ -38,7 +38,7 @@ const createStyles = (settings: ResumeSettings) => {
     page: {
       fontFamily: settings.fontFamily,
       fontSize: settings.fontSizeBody,
-      lineHeight: 1.45,
+      lineHeight: 1.25,
       color: COLORS.text,
       backgroundColor: '#FFFFFF',
       paddingVertical: settings.marginVertical,
