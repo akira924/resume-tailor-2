@@ -2,6 +2,7 @@ import type { IResume } from 'src/types/resume';
 
 import { json } from '@codemirror/lang-json';
 import CodeMirror from '@uiw/react-codemirror';
+import { setStorage } from 'minimal-shared/utils';
 import { useDebounce } from 'minimal-shared/hooks';
 import { useState, useEffect, useCallback } from 'react';
 
@@ -22,7 +23,7 @@ import { Iconify } from 'src/components/iconify';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { ResumePDFViewer } from '../resume-pdf';
-import { parseResumeJson } from '../resume-utils';
+import { parseResumeJson, RESUME_STORAGE_KEY, readStoredResumeJson } from '../resume-utils';
 
 // ----------------------------------------------------------------------
 
@@ -39,8 +40,8 @@ export function ResumeView() {
   const { mode, systemMode } = useColorScheme();
   const editorTheme = (mode === 'system' ? systemMode : mode) === 'dark' ? 'dark' : 'light';
 
-  const [jsonText, setJsonText] = useState(INITIAL_JSON);
-  const [resume, setResume] = useState<IResume>(_resume);
+  const [jsonText, setJsonText] = useState(() => readStoredResumeJson() ?? INITIAL_JSON);
+  const [resume, setResume] = useState<IResume>(() => parseResumeJson(jsonText).resume ?? _resume);
   const [jsonError, setJsonError] = useState<string | null>(null);
 
   // Re-rendering the PDF is expensive, so wait for a pause in typing.
@@ -57,7 +58,28 @@ export function ResumeView() {
 
     setJsonError(null);
     setResume(result.resume);
+    // Also seeds storage with the mock on first visit. Broken JSON is never persisted.
+    setStorage(RESUME_STORAGE_KEY, JSON.parse(debouncedText));
   }, [debouncedText]);
+
+  // `storage` events only fire in other tabs, so this can't echo this tab's own writes.
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== RESUME_STORAGE_KEY) {
+        return;
+      }
+
+      const storedText = readStoredResumeJson();
+
+      if (storedText) {
+        setJsonText(storedText);
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   const handleReset = useCallback(() => setJsonText(INITIAL_JSON), []);
 
