@@ -65,7 +65,6 @@ const createStyles = (settings: ResumeSettings) => {
       color: theme.accent,
       textAlign: settings.sectionTitleAlign,
       textTransform: 'uppercase',
-      letterSpacing: 0.8,
       paddingBottom: 2,
       marginBottom: 5,
       borderBottomWidth: settings.sectionTitleBorder ? 1 : 0,
