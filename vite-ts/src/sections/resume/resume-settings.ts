@@ -1,7 +1,5 @@
 // ----------------------------------------------------------------------
 
-export const RESUME_SETTINGS_STORAGE_KEY = 'resume-settings';
-
 export type ResumeSectionId = 'skills' | 'experience' | 'education' | 'certification';
 export type ResumeHeaderLayout = 'left' | 'center' | 'hybrid';
 export type ResumeSectionTitleAlign = 'left' | 'center';

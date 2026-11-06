@@ -21,7 +21,7 @@ type Props = {
  * Asks before leaving while there are unsaved changes: a dialog for links inside
  * the app, and the browser's own prompt for refresh, closing the tab or external links.
  */
-export function ProfileUnsavedChangesDialog({ when }: Props) {
+export function UnsavedChangesDialog({ when }: Props) {
   const { authenticated } = useAuthContext();
 
   const active = when && authenticated;
@@ -50,7 +50,7 @@ export function ProfileUnsavedChangesDialog({ when }: Props) {
       open={blocker.state === 'blocked'}
       onClose={() => blocker.reset?.()}
       title="Leave without saving?"
-      content="You have unsaved changes to your profile. If you leave now, they will be lost."
+      content="You have unsaved changes. If you leave now, they will be lost."
       action={
         <Button variant="contained" color="error" onClick={() => blocker.proceed?.()}>
           Leave

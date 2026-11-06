@@ -16,12 +16,12 @@ import { updateProfile } from 'src/actions/profile';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
+import { UnsavedChangesDialog } from 'src/components/unsaved-changes-dialog';
 
 import { ProfileEducation } from './profile-education';
 import { ProfileExperience } from './profile-experience';
 import { ProfileCertifications } from './profile-certifications';
 import { toFormValues, ProfileSchema, defaultValues } from './profile-schema';
-import { ProfileUnsavedChangesDialog } from './profile-unsaved-changes-dialog';
 
 // ----------------------------------------------------------------------
 
@@ -147,7 +147,7 @@ export function ProfileForm({ profile }: Props) {
         </Box>
       </Stack>
 
-      <ProfileUnsavedChangesDialog when={isDirty && !isSubmitting} />
+      <UnsavedChangesDialog when={isDirty && !isSubmitting} />
     </Form>
   );
 }

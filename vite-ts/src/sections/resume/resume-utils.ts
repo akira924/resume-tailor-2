@@ -1,10 +1,6 @@
 import type { IResume } from 'src/types/resume';
 
-import { getStorage } from 'minimal-shared/utils';
-
 // ----------------------------------------------------------------------
-
-export const RESUME_STORAGE_KEY = 'resume-data';
 
 type ParseResult = { resume: IResume; error: null } | { resume: null; error: string };
 
@@ -80,17 +76,4 @@ export function parseResumeJson(text: string): ParseResult {
   };
 
   return { resume, error: null };
-}
-
-/** Returns the stored resume as editor text, or null if nothing usable is stored. */
-export function readStoredResumeJson(): string | null {
-  const stored = getStorage<unknown>(RESUME_STORAGE_KEY);
-
-  if (!stored) {
-    return null;
-  }
-
-  const text = JSON.stringify(stored, null, 2);
-
-  return parseResumeJson(text).resume ? text : null;
 }

@@ -61,6 +61,7 @@ export const endpoints = {
   kanban: '/api/kanban',
   calendar: '/api/calendar',
   profile: '/api/profile',
+  resume: '/api/resume',
   users: {
     list: '/api/users',
     events: '/api/users/events',
