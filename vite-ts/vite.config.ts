@@ -7,6 +7,12 @@ import react from '@vitejs/plugin-react-swc';
 
 const PORT = 8080;
 
+// The browser calls /api on whichever host served the page, and Vite forwards it to the API
+// running on the same machine. This lets other devices on the network use the dev server.
+const proxy = {
+  '/api': 'http://127.0.0.1:7272',
+};
+
 export default defineConfig({
   plugins: [
     react(),
@@ -31,6 +37,6 @@ export default defineConfig({
       },
     ],
   },
-  server: { port: PORT, host: true },
-  preview: { port: PORT, host: true },
+  server: { port: PORT, host: true, proxy },
+  preview: { port: PORT, host: true, proxy },
 });
