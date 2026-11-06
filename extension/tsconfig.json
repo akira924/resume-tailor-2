@@ -11,7 +11,13 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "paths": {
+      "src/types/*": ["../vite-ts/src/types/*"],
+      "react": ["./node_modules/@types/react"],
+      "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime"],
+      "@react-pdf/renderer": ["./node_modules/@react-pdf/renderer"]
+    }
   },
   "include": ["src", "vite.config.ts"]
 }

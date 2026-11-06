@@ -67,3 +67,9 @@ export const getMe = (accessToken: string) =>
   request<{ user: User }>('/api/auth/me', {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
+
+/** `resume` is null until the user first saves on the website. */
+export const getSavedResume = (accessToken: string) =>
+  request<{ resume: { settings: Record<string, unknown> } | null }>('/api/resume', {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });

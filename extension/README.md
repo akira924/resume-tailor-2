@@ -25,4 +25,6 @@ npm run build
 
 The API defaults to `http://localhost:7272`. To use another one, copy `.env.example` to `.env` and set `VITE_API_URL`. The build grants the extension access to that host, so the server's `CORS_ORIGIN` doesn't need changing.
 
+The resume PDF is the website's own component: the extension imports it from `../vite-ts/src/sections/resume` and copies the fonts from `../vite-ts/public/fonts` at build time. Rebuild after changing either, so both keep producing the same resume.
+
 Chrome decides which side the panel opens on. The default is the right; users can change it in Chrome's appearance settings.
