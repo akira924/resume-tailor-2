@@ -85,6 +85,7 @@ const createStyles = (settings: ResumeSettings) => {
     // experience
     // Jobs must stay direct children of the section, with no wrapper View: if a wrapper's first
     // job can't start on the page, react-pdf puts the whole job on that page and cuts off its text.
+    // For the same reason, the first company entry is rendered with the section title, not in its job.
     nextJob: { marginTop: 8 },
     entryHighlight: { fontWeight: 700, color: theme.accent },
     roleDescription: { color: COLORS.secondary, marginTop: 2 },
@@ -100,7 +101,8 @@ const createStyles = (settings: ResumeSettings) => {
 type ResumeStyles = ReturnType<typeof createStyles>;
 
 // Page-break rules: each of these stays together on one page (wrap={false}).
-//  - Section title and its border line
+//  - Section title and its border line, together with the first entry of Work Experience,
+//    Education and Certifications
 //  - Company entry: job title, period, company, location
 //  - Role description
 //  - Each bullet, with the "Key Contributions" label on the first bullet
@@ -140,15 +142,20 @@ export function ResumePDFViewer({ resume, settings }: Props) {
 type SectionProps = {
   title: string;
   styles: ResumeStyles;
-  children: React.ReactNode;
+  /** Kept on the same page as the title. */
+  firstEntry?: React.ReactNode;
+  style?: ResumeStyles[keyof ResumeStyles];
+  children?: React.ReactNode;
 };
 
-function Section({ title, styles, children }: SectionProps) {
+function Section({ title, styles, firstEntry, style, children }: SectionProps) {
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle} wrap={false}>
-        {title}
-      </Text>
+    <View style={style ? [styles.section, style] : styles.section}>
+      {/* Must be a direct child of the section. See the note on jobs in createStyles. */}
+      <View wrap={false}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        {firstEntry}
+      </View>
       {children}
     </View>
   );
@@ -268,7 +275,11 @@ export function ResumePdfDocument({ resume, settings }: Props) {
 
   const renderExperience = () =>
     !!resume.experience.length && (
-      <Section title="Work Experience" styles={styles}>
+      <Section
+        title="Work Experience"
+        styles={styles}
+        firstEntry={renderCompanyEntry(resume.experience[0])}
+      >
         {resume.experience.map((job, index) => {
           const technologies = !!job.used_skills?.length && (
             <Text wrap={false}>
@@ -279,7 +290,7 @@ export function ResumePdfDocument({ resume, settings }: Props) {
 
           return (
             <View key={index} style={index > 0 ? styles.nextJob : undefined}>
-              <View wrap={false}>{renderCompanyEntry(job)}</View>
+              {index > 0 && <View wrap={false}>{renderCompanyEntry(job)}</View>}
 
               {!!job.role_description && (
                 <Text style={styles.roleDescription} wrap={false}>
@@ -307,33 +318,52 @@ export function ResumePdfDocument({ resume, settings }: Props) {
       </Section>
     );
 
+  const renderEducationEntry = (edu: IResume['education'][number]) => (
+    <>
+      <View style={styles.row}>
+        <Text style={styles.bold}>{edu.institution}</Text>
+        <Text style={styles.muted}>{edu.period}</Text>
+      </View>
+      <Text>{[edu.degree, edu.major].filter(Boolean).join(', ')}</Text>
+    </>
+  );
+
   const renderEducation = () =>
     !!resume.education.length && (
-      <Section title="Education" styles={styles}>
-        <View style={styles.educations}>
-          {resume.education.map((edu, index) => (
-            <View key={index} wrap={false}>
-              <View style={styles.row}>
-                <Text style={styles.bold}>{edu.institution}</Text>
-                <Text style={styles.muted}>{edu.period}</Text>
-              </View>
-              <Text>{[edu.degree, edu.major].filter(Boolean).join(', ')}</Text>
-            </View>
-          ))}
-        </View>
+      <Section
+        title="Education"
+        styles={styles}
+        style={styles.educations}
+        firstEntry={renderEducationEntry(resume.education[0])}
+      >
+        {resume.education.slice(1).map((edu, index) => (
+          <View key={index} wrap={false}>
+            {renderEducationEntry(edu)}
+          </View>
+        ))}
       </Section>
     );
 
+  const renderCertificationEntry = (cert: IResume['certification'][number]) => (
+    <View style={styles.row}>
+      <Text>
+        <Text style={styles.bold}>{cert.name}</Text>
+        {cert.institution ? `, ${cert.institution}` : ''}
+      </Text>
+      <Text style={styles.muted}>{cert.date}</Text>
+    </View>
+  );
+
   const renderCertifications = () =>
     !!resume.certification.length && (
-      <Section title="Certifications" styles={styles}>
-        {resume.certification.map((cert, index) => (
-          <View key={index} style={styles.row} wrap={false}>
-            <Text>
-              <Text style={styles.bold}>{cert.name}</Text>
-              {cert.institution ? `, ${cert.institution}` : ''}
-            </Text>
-            <Text style={styles.muted}>{cert.date}</Text>
+      <Section
+        title="Certifications"
+        styles={styles}
+        firstEntry={renderCertificationEntry(resume.certification[0])}
+      >
+        {resume.certification.slice(1).map((cert, index) => (
+          <View key={index} wrap={false}>
+            {renderCertificationEntry(cert)}
           </View>
         ))}
       </Section>
