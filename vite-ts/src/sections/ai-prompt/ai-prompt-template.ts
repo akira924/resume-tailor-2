@@ -77,7 +77,7 @@ JOB TITLES AND HEADLINE
 - Headline reflects job titles.
 
 "summary":
-- 3–4 sentences.
+- 3–4 sentences, 45-75 words.
 - Professional, ATS-optimized, concise.
 - Aligned with the job description.
 
