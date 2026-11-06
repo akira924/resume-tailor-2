@@ -85,7 +85,7 @@ const createStyles = (settings: ResumeSettings) => {
     // experience
     // Jobs must stay direct children of the section, with no wrapper View: if a wrapper's first
     // job can't start on the page, react-pdf puts the whole job on that page and cuts off its text.
-    // For the same reason, the first company entry is rendered with the section title, not in its job.
+    // For the same reason, the first job header is rendered with the section title, not in its job.
     nextJob: { marginTop: 8 },
     entryHighlight: { fontWeight: 700, color: theme.accent },
     roleDescription: { color: COLORS.secondary, marginTop: 2 },
@@ -103,8 +103,7 @@ type ResumeStyles = ReturnType<typeof createStyles>;
 // Page-break rules: each of these stays together on one page (wrap={false}).
 //  - Section title and its border line, together with the first entry of Work Experience,
 //    Education and Certifications
-//  - Company entry: job title, period, company, location
-//  - Role description
+//  - Job header: job title, period, company, location and the whole role description
 //  - Each bullet, with the "Key Contributions" label on the first bullet
 //    and "Technologies" on the last bullet
 //  - Education entry
@@ -252,6 +251,13 @@ export function ResumePdfDocument({ resume, settings }: Props) {
     }
   };
 
+  const renderJobHeader = (job: IResume['experience'][number]) => (
+    <>
+      {renderCompanyEntry(job)}
+      {!!job.role_description && <Text style={styles.roleDescription}>{job.role_description}</Text>}
+    </>
+  );
+
   const renderSummary = () =>
     !!resume.summary && (
       <Section title="Professional Summary" styles={styles}>
@@ -278,7 +284,7 @@ export function ResumePdfDocument({ resume, settings }: Props) {
       <Section
         title="Work Experience"
         styles={styles}
-        firstEntry={renderCompanyEntry(resume.experience[0])}
+        firstEntry={renderJobHeader(resume.experience[0])}
       >
         {resume.experience.map((job, index) => {
           const technologies = !!job.used_skills?.length && (
@@ -290,13 +296,7 @@ export function ResumePdfDocument({ resume, settings }: Props) {
 
           return (
             <View key={index} style={index > 0 ? styles.nextJob : undefined}>
-              {index > 0 && <View wrap={false}>{renderCompanyEntry(job)}</View>}
-
-              {!!job.role_description && (
-                <Text style={styles.roleDescription} wrap={false}>
-                  {job.role_description}
-                </Text>
-              )}
+              {index > 0 && <View wrap={false}>{renderJobHeader(job)}</View>}
 
               <View style={styles.bullets}>
                 {job.sentences.map((sentence, i) => (
